@@ -43,7 +43,7 @@ function CartItem({ cartItem }) {
           </em>
         </p>
       </div>
-      <RemoveFromCart id={product.id} />
+      <RemoveFromCart id={cartItem.id} />
     </CartItemStyles>
   );
 }
