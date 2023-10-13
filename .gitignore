@@ -7,5 +7,6 @@ haters/
 layout.md
 variables.env
 *.env
+*.env.*
 .keystone
 *.db
