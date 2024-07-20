@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:4.4
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    networks:
+      - backend
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWORD}
+      ME_CONFIG_BASICAUTH: false
+    networks:
+      - backend
+    depends_on:
+      - mongo
+
+  keystone:
+    build:
+      context: ./backend
+    environment:
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_KEY: ${CLOUDINARY_KEY}
+      CLOUDINARY_SECRET: ${CLOUDINARY_SECRET}
+      COOKIE_SECRET: ${COOKIE_SECRET}
+      DATABASE_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongo:27017
+      STRIPE_SECRET: ${STRIPE_SECRET}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USER: ${MAIL_USER}
+      MAIL_PASS: ${MAIL_PASS}
+      FRONTEND_URL: http://frontend:7777
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    networks:
+      - backend
+    depends_on:
+      - mongo
+
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      NODE_ENV: production
+      BACKEND_URL: http://keystone:3000/api/graphql
+    ports:
+      - "7777:7777"
+    networks:
+      - backend
+    depends_on:
+      - keystone
+
+volumes:
+  mongo-data:
+    driver: local
+
+networks:
+  backend:
+    driver: bridge
